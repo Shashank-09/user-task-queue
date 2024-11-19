@@ -1,0 +1,145 @@
+User Task Queuing with Rate Limiting
+Overview
+This project is a Node.js API that allows users to send tasks for processing. The API ensures that tasks are handled in a controlled manner with user-specific rate limiting and a task queue. It is designed to:
+
+Process tasks at a maximum of 1 task per second and 20 tasks per minute per user.
+Queue additional tasks if the rate limit is exceeded and process them later.
+Log the completion of each task in a file with the user's ID and the timestamp.
+Features
+User-Specific Rate Limiting:
+Each user can process:
+A maximum of 1 task per second.
+A maximum of 20 tasks per minute.
+Task Queue:
+Tasks exceeding the rate limit are queued for later processing.
+Task Logging:
+Completed tasks are logged in a file (logs/tasks.log) with details like:
+User ID.
+Task completion timestamp.
+Scalability:
+The API uses Redis and Bull for managing the queue, making it efficient and scalable.
+Setup Instructions
+Prerequisites
+Node.js (v16 or later)
+Redis
+A package manager like npm or yarn
+Installation
+Clone the repository:
+
+bash
+Copy code
+git clone <repository-url>
+cd user-task-queue
+Install dependencies:
+
+bash
+Copy code
+npm install
+Start Redis:
+
+On macOS:
+bash
+Copy code
+brew services start redis
+On Linux:
+bash
+Copy code
+sudo systemctl start redis
+On Windows: Launch redis-server.exe.
+Start the API:
+
+bash
+Copy code
+node src/server.js
+API Usage
+Route: POST /api/tasks
+Request Body:
+
+json
+Copy code
+{
+  "user_id": "123"
+}
+Response:
+
+Success:
+json
+Copy code
+{
+  "message": "Task queued successfully!"
+}
+Error:
+json
+Copy code
+{
+  "error": "user_id is required"
+}
+How It Works
+A user sends a task via the POST /api/tasks route.
+The API checks:
+Rate limits: Whether the user has exceeded 1 task per second or 20 tasks per minute.
+If the user exceeds the limit:
+The task is added to a queue.
+If within the limit:
+The task is processed immediately.
+Completed tasks are logged in the file: logs/tasks.log.
+Folder Structure
+bash
+Copy code
+/user-task-queue
+├── src
+│   ├── server.js          # Entry point for the API
+│   ├── worker.js          # Worker for processing tasks
+│   ├── routes
+│   │   └── taskRoutes.js  # API routes
+│   ├── utils
+│   │   └── logger.js      # Utility for logging tasks
+│   ├── queue.js           # Queue management with Bull
+│   └── rateLimiter.js     # Rate limiting logic with Redis
+├── logs
+│   └── tasks.log          # Log file for completed tasks
+├── README.md              # Documentation
+└── package.json           # Project dependencies and scripts
+How to Test
+Using Postman:
+Open Postman.
+Create a new POST request with the URL:
+bash
+Copy code
+http://localhost:3000/api/tasks
+Add the JSON body:
+json
+Copy code
+{
+  "user_id": "123"
+}
+Send the request and check the response:
+Success: Task is queued or processed.
+Error: If user_id is missing, you’ll see an error response.
+To test rate limits:
+Send multiple requests quickly to see tasks getting queued.
+Checking Logs
+Open the file logs/tasks.log after processing some tasks.
+Each log entry contains the user_id and the time when the task was completed:
+arduino
+Copy code
+123 - Task completed at 2024-11-18T10:30:00.123Z
+456 - Task completed at 2024-11-18T10:30:01.456Z
+Libraries Used
+Express: For building the API.
+Redis: For rate-limiting and queue management.
+Bull: For managing task queues.
+fs-extra: For logging tasks to a file.
+Scaling the System
+The API is designed to handle multiple users efficiently.
+By using Redis and Bull, it supports distributed task processing, making it suitable for high traffic.
+The clustering feature (cluster module) allows the app to use all available CPU cores.
+Common Errors and Solutions
+Error	Cause	Solution
+zsh: command not found: redis-server	Redis is not installed or not in PATH.	Install Redis and add it to PATH (refer to the setup).
+user_id is required	Request body is missing user_id.	Send a valid JSON payload with user_id.
+Redis connection error	Redis is not running.	Start Redis (redis-server).
+Future Improvements
+Add authentication to restrict access to the API.
+Implement detailed error logging.
+Use Docker for easier deployment of Redis and the API.
